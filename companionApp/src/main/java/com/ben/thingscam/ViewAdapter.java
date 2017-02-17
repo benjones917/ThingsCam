@@ -14,14 +14,14 @@ import android.widget.TextView;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 
-public class ViewAdapter extends FirebaseRecyclerAdapter<ThingsCamImages, ViewAdapter.DoorbellEntryViewHolder> {
+public class ViewAdapter extends FirebaseRecyclerAdapter<ThingsCamImages, ViewAdapter.ImagesViewHolder> {
 
-    public static class DoorbellEntryViewHolder extends RecyclerView.ViewHolder {
+    public static class ImagesViewHolder extends RecyclerView.ViewHolder {
 
         public final ImageView image;
         public final TextView label;
 
-        public DoorbellEntryViewHolder(View itemView) {
+        public ImagesViewHolder(View itemView) {
             super(itemView);
 
             this.image = (ImageView) itemView.findViewById(R.id.imageView1);
@@ -32,13 +32,13 @@ public class ViewAdapter extends FirebaseRecyclerAdapter<ThingsCamImages, ViewAd
     private Context mApplicationContext;
 
     public ViewAdapter(Context context, DatabaseReference ref) {
-        super(ThingsCamImages.class, R.layout.view_adapter, DoorbellEntryViewHolder.class, ref);
+        super(ThingsCamImages.class, R.layout.view_adapter, ImagesViewHolder.class, ref);
 
         mApplicationContext = context.getApplicationContext();
     }
 
     @Override
-    protected void populateViewHolder(DoorbellEntryViewHolder viewHolder, ThingsCamImages model, int position) {
+    protected void populateViewHolder(ImagesViewHolder viewHolder, ThingsCamImages model, int position) {
         viewHolder.label.setText(model.getLabel());
 
         if (model.getImage() != null) {
