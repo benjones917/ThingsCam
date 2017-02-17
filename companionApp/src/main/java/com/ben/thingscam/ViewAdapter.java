@@ -3,27 +3,25 @@ package com.ben.thingscam;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.Drawable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.database.DatabaseReference;
 
-import java.util.List;
+public class ViewAdapter extends FirebaseRecyclerAdapter<ThingsCamImages, ViewAdapter.DoorbellEntryViewHolder> {
 
-public class ViewAdapter extends RecyclerView.Adapter<ViewAdapter.ImageViewHolder> {
-    private List<ThingsCamImages> dataset;
+    public static class DoorbellEntryViewHolder extends RecyclerView.ViewHolder {
 
-    public static class ImageViewHolder extends RecyclerView.ViewHolder {
+        public final ImageView image;
+        public final TextView label;
 
-        public ImageView image;
-        public TextView label;
-
-        public ImageViewHolder(View itemView) {
+        public DoorbellEntryViewHolder(View itemView) {
             super(itemView);
 
             this.image = (ImageView) itemView.findViewById(R.id.imageView1);
@@ -33,34 +31,27 @@ public class ViewAdapter extends RecyclerView.Adapter<ViewAdapter.ImageViewHolde
 
     private Context mApplicationContext;
 
-    public ViewAdapter(List<ThingsCamImages> ds) {
-        dataset = ds;
+    public ViewAdapter(Context context, DatabaseReference ref) {
+        super(ThingsCamImages.class, R.layout.view_adapter, DoorbellEntryViewHolder.class, ref);
+
+        mApplicationContext = context.getApplicationContext();
     }
 
     @Override
-    public ViewAdapter.ImageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // create a new view
-        TextView v = (TextView) LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.view_adapter, parent, false);
-        // set the view's size, margins, paddings and layout parameters
-        //...
-        ImageViewHolder vh = new ImageViewHolder(v);
-        return vh;
-    }
+    protected void populateViewHolder(DoorbellEntryViewHolder viewHolder, ThingsCamImages model, int position) {
+        viewHolder.label.setText(model.getLabel());
 
-    @Override
-    public void onBindViewHolder(ImageViewHolder holder, int position) {
-        holder.label.setText(dataset.get(position).getLabel());
-        byte [] image = Base64.decode(dataset.get(position).getImage(), Base64.DEFAULT);
-        Bitmap bmp = BitmapFactory.decodeByteArray(image, 0, image.length);
-        holder.image.setImageBitmap(bmp);
-
-    }
-
-    // Return the size of your dataset (invoked by the layout manager)
-    @Override
-    public int getItemCount() {
-        return dataset.size();
+        if (model.getImage() != null) {
+            byte[] imageBytes = Base64.decode(model.getImage(), Base64.NO_WRAP | Base64.URL_SAFE);
+            Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
+            if (bitmap != null) {
+                viewHolder.image.setImageBitmap(bitmap);
+            } else {
+                Drawable placeholder =
+                        ContextCompat.getDrawable(mApplicationContext, R.drawable.ic_image);
+                viewHolder.image.setImageDrawable(placeholder);
+            }
+        }
     }
 
 }

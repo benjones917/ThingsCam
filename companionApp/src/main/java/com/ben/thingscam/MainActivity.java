@@ -1,18 +1,3 @@
-/*
- * Copyright 2016, The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package com.ben.thingscam;
 
 import android.app.Activity;
@@ -29,14 +14,17 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class MainActivity extends Activity {
     private static final String TAG = "MainActivity";
 
 
     private RecyclerView recyclerView;
-    private FirebaseStorage storage = FirebaseStorage.getInstance();
+    private ViewAdapter viewAdapter;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private DatabaseReference databaseRef = database.getReference();
+    private DatabaseReference databaseRef;
     private FirebaseAuth auth = FirebaseAuth.getInstance();
     private FirebaseAuth.AuthStateListener authListener;
 
@@ -46,10 +34,7 @@ public class MainActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        recyclerView = (RecyclerView) findViewById(R.id.doorbellView);
-        LinearLayoutManager layoutManager =
-                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true);
-        recyclerView.setLayoutManager(layoutManager);
+
 
         authListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -63,24 +48,44 @@ public class MainActivity extends Activity {
             }
         };
 
+        auth.addAuthStateListener(authListener);
+        auth.signOut();
+        auth.signInAnonymously();
+        Log.d(TAG, "Signed in to Firebase Anonymously");
 
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://thingscamera.appspot.com");
+        recyclerView = (RecyclerView) findViewById(R.id.doorbellView);
+        LinearLayoutManager layoutManager =
+                new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, true);
+        recyclerView.setLayoutManager(layoutManager);
+
+        databaseRef = database.getReference().child("images");
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        auth.addAuthStateListener(authListener);
-        auth.signOut();
-        auth.signInAnonymously();
-        Log.d(TAG, "Signed in to Firebase Anonymously");
+
+        viewAdapter = new ViewAdapter(this, databaseRef);
+        recyclerView.setAdapter(viewAdapter);
+
+        viewAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                recyclerView.smoothScrollToPosition(viewAdapter.getItemCount());
+            }
+        });
+
 
     }
 
     @Override
     public void onStop() {
         super.onStop();
-
+        if (viewAdapter != null) {
+            viewAdapter.cleanup();
+            viewAdapter = null;
+        }
     }
 
 }
