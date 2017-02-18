@@ -31,7 +31,6 @@ public class MainScheduler extends Activity {
     private Handler timerHandler;
     private FirebaseStorage storage = FirebaseStorage.getInstance();
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private DatabaseReference databaseRef = database.getReference();
     private FirebaseAuth auth = FirebaseAuth.getInstance();
     private FirebaseAuth.AuthStateListener authListener;
     private Handler mCameraHandler;
@@ -110,10 +109,13 @@ public class MainScheduler extends Activity {
     private void onPictureTaken(final byte[] imageBytes) {
         if (imageBytes != null) {
             Log.d(TAG, "Sending Image to Cloud");
+            final DatabaseReference databaseRef = database.getReference("images").push();
             SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
             Date now = new Date();
             String fileName = df.format(now);
-            databaseRef.child("images").child(fileName).setValue(Base64.encode(imageBytes, Base64.DEFAULT));
+            String imageStr = Base64.encodeToString(imageBytes, Base64.NO_WRAP | Base64.URL_SAFE);
+            databaseRef.child("label").setValue(fileName);
+            databaseRef.child("image").setValue(imageStr);
             StorageReference storageRef = storage.getReferenceFromUrl("gs://thingscamera.appspot.com");
             StorageReference imageRef = storageRef.child(fileName + ".jpg");
             imageRef.putBytes(imageBytes);
